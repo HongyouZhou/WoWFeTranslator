@@ -1,0 +1,14 @@
+## Interface: 16001
+## Title: WoWFeTranslator
+## Notes: Internal alpha: English / Chinese item-name reader.
+## Author: HongyouZhou
+## Version: 0.1.0-alpha.1
+## SavedVariables: WoWFeTranslatorDB
+
+Core.lua
+Diagnostics.lua
+Repository.lua
+Presenter.lua
+Tooltips.lua
+UI.lua
+Init.lua

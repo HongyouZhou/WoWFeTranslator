@@ -1,0 +1,22 @@
+WoWFeTranslator 0.1.0-alpha.1
+Date: 2026-11-23
+Command: lua5.1 benchmarks/runtime.lua
+Environment: development Linux host, Lua 5.1.5, mocked WoW APIs, 13-item sample.
+Diagnostics OFF. One illustrative run; not a statistical performance budget.
+No real font rendering, Blizzard UI layout, security checks or Windows client.
+Retained KiB is Lua memory after explicit GC, not peak/total allocation.
+
+disabled callback: n=100000 total_ms=16.877 avg_us=0.169 retained_KiB=-0.05
+first load+lookup: n=1 total_ms=0.056 avg_us=56.000 retained_KiB=6.96
+direct existing lookup: n=100000 total_ms=11.016 avg_us=0.110 retained_KiB=0.00
+direct missing lookup: n=100000 total_ms=12.623 avg_us=0.126 retained_KiB=0.00
+repeat visible tooltip: n=10000 total_ms=13.978 avg_us=1.398 retained_KiB=0.16
+alternating items incl mock events/layout: n=10000 total_ms=36.571 avg_us=3.657 retained_KiB=0.00
+
+Structural assertions passed:
+- No data load, queued callback or clock sampling during disabled workload.
+- Exactly one data-pack load across the enabled workload.
+- No diagnostic clock sampling while diagnostics are disabled.
+
+Windows client first-load, repeated, disabled and PvP measurements: PENDING.
+Follow docs/windows-testing.md; do not compare these mock timings to FPS.

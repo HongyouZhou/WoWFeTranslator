@@ -1,0 +1,133 @@
+{
+  "schemaVersion": 1,
+  "game": "forever",
+  "interface": 16001,
+  "sources": {
+    "manual-sample": {
+      "description": "Manually curated familiar item-name examples for internal engineering tests; not a bulk import or a verified Forever database.",
+      "rights": "Game item identities and names belong to their respective rights holders; no upstream addon code or database copied.",
+      "revision": "2026-11-23"
+    }
+  },
+  "entities": [
+    {
+      "type": "item",
+      "id": 6948,
+      "names": {
+        "enUS": "Hearthstone",
+        "zhCN": "炉石"
+      },
+      "source": "manual-sample"
+    },
+    {
+      "type": "item",
+      "id": 2589,
+      "names": {
+        "enUS": "Linen Cloth",
+        "zhCN": "亚麻布"
+      },
+      "source": "manual-sample"
+    },
+    {
+      "type": "item",
+      "id": 159,
+      "names": {
+        "enUS": "Refreshing Spring Water",
+        "zhCN": "清凉的泉水"
+      },
+      "source": "manual-sample"
+    },
+    {
+      "type": "item",
+      "id": 4540,
+      "names": {
+        "enUS": "Tough Hunk of Bread",
+        "zhCN": "硬面包"
+      },
+      "source": "manual-sample"
+    },
+    {
+      "type": "item",
+      "id": 4536,
+      "names": {
+        "enUS": "Shiny Red Apple",
+        "zhCN": "新鲜的红苹果"
+      },
+      "source": "manual-sample"
+    },
+    {
+      "type": "item",
+      "id": 2070,
+      "names": {
+        "enUS": "Darnassian Bleu",
+        "zhCN": "达纳苏斯奶酪"
+      },
+      "source": "manual-sample"
+    },
+    {
+      "type": "item",
+      "id": 118,
+      "names": {
+        "enUS": "Minor Healing Potion",
+        "zhCN": "初级治疗药水"
+      },
+      "source": "manual-sample"
+    },
+    {
+      "type": "item",
+      "id": 2455,
+      "names": {
+        "enUS": "Minor Mana Potion",
+        "zhCN": "初级法力药水"
+      },
+      "source": "manual-sample"
+    },
+    {
+      "type": "item",
+      "id": 2770,
+      "names": {
+        "enUS": "Copper Ore",
+        "zhCN": "铜矿石"
+      },
+      "source": "manual-sample"
+    },
+    {
+      "type": "item",
+      "id": 2835,
+      "names": {
+        "enUS": "Rough Stone",
+        "zhCN": "劣质的石头"
+      },
+      "source": "manual-sample"
+    },
+    {
+      "type": "item",
+      "id": 2447,
+      "names": {
+        "enUS": "Peacebloom",
+        "zhCN": "宁神花"
+      },
+      "source": "manual-sample"
+    },
+    {
+      "type": "item",
+      "id": 765,
+      "names": {
+        "enUS": "Silverleaf",
+        "zhCN": "银叶草"
+      },
+      "source": "manual-sample"
+    },
+    {
+      "type": "item",
+      "id": 2318,
+      "names": {
+        "enUS": "Light Leather",
+        "zhCN": "轻皮"
+      },
+      "source": "manual-sample"
+    }
+  ],
+  "terms": [],
+  "texts": []
+}
