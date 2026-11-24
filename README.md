@@ -2,11 +2,11 @@
 
 面向 World of Warcraft: Forever 的免费开源翻译插件，优先支持 Windows 上的英文客户端与简体中文翻译。
 
-项目以 RPG 阅读体验、可随时切换的使用模式和可验证的性能为核心。采用独立仓库开发；当前提供 `0.1.0-alpha.1` 核心测试版，开发环境检查已通过，Windows 游戏内验证待完成。
+项目以 RPG 阅读体验、可随时切换的使用模式和可验证的性能为核心。采用独立仓库开发；当前提供 `0.2.0-alpha.1` 核心测试版，开发环境检查已通过，Windows 游戏内验证待完成。
 
 首包包含 13 个物品名称、双语提示卡片、账号共享设置、UI 开关及剧情／精简／竞技模式、字号／颜色／字体设置和可关闭的性能诊断。任务阅读、NPC／技能翻译及术语注释尚未实现。Python 只在开发机构建数据，游戏内只运行 Lua。
 
-开发机执行 `python3 tools/check.py` 完成检查并生成 `dist/WoWFeTranslator-0.1.0-alpha.1.zip`。将 ZIP 传到 Windows，把其中两个插件目录复制到实际 Forever 实例的 `Interface\AddOns`；无需通过 CurseForge 发布或安装 Python。详见下面的测试指南。
+开发机执行 `python3 tools/check.py` 完成检查并生成 `dist/WoWFeTranslator-0.2.0-alpha.1.zip`。将 ZIP 传到 Windows，把其中两个插件目录复制到实际 Forever 实例的 `Interface\AddOns`；无需通过 CurseForge 发布或安装 Python。详见下面的测试指南。
 
 也可在 Windows 用 Git 克隆本仓库，直接复制 `addon` 下的两个目录到游戏的 `Interface\AddOns`；生成数据与字体已包含在仓库中，无需构建。后续执行 `git pull --ff-only`，再替换游戏中的两个插件目录。具体步骤见 [Git 同步说明](docs/windows-testing.md#通过-git-同步)。
 

@@ -1,6 +1,6 @@
 # Windows 内部测试指南
 
-适用安装包：`WoWFeTranslator-0.1.0-alpha.1.zip`。这是 13 个物品名称的核心验证版，还没有任务翻译、NPC／技能翻译或术语注释界面。开发环境测试与游戏内验收分开记录；当前游戏内结果待测。
+适用安装包：`WoWFeTranslator-0.2.0-alpha.1.zip`。这是 13 个物品名称的核心验证版，还没有任务翻译、NPC／技能翻译或术语注释界面。相对 `0.1.0-alpha.1` 的变化：提示框刷新时译文不再闪烁，EllesmereUI 隐藏提示框时不做处理，中文通过字体族始终使用随包字体（设置中的字体改为“英文字体”），报告增加 `owner_set`、`content_cleared` 计数、`render=` 字体模式和 `C_AddOnProfiler` 指标。本轮重点验证这些变化，并在原版界面与 EllesmereUI 下各测一遍。开发环境测试与游戏内验收分开记录；当前游戏内结果待测。
 
 ## 1. 通过 Git 同步或传输安装包
 
@@ -32,7 +32,7 @@ git pull --ff-only
 
 ### 传输 ZIP
 
-开发机的文件是 `dist/WoWFeTranslator-0.1.0-alpha.1.zip`。通过你现有的文件传输方式、共享文件夹或 U 盘复制到 Windows；Windows 端无需 Git、Python 或 Lua 解释器。不必将开发仓库整个复制过去。
+开发机的文件是 `dist/WoWFeTranslator-0.2.0-alpha.1.zip`。通过你现有的文件传输方式、共享文件夹或 U 盘复制到 Windows；Windows 端无需 Git、Python 或 Lua 解释器。不必将开发仓库整个复制过去。
 
 仓库尚未发布 CurseForge 项目，也没有自动更新或 GitHub Release。不要在 CurseForge 搜索此名称作为安装前提；继续用 CurseForge 管理其他插件，本测试包手动安装。
 
@@ -62,7 +62,7 @@ git pull --ff-only
 
 当前 TOC 的接口号为 `16001`，来自此前提供的客户端快照。如果被标为过期，先记录当前版本和提示；可通过游戏自身的“加载过期插件”选项试测，但这不证明兼容。不要为了消除提示随意修改接口号。若出现“依赖缺失”，检查第二个目录和两项启用状态。
 
-可选：用 Windows PowerShell 的 `Get-FileHash -Algorithm SHA256 .\WoWFeTranslator-0.1.0-alpha.1.zip` 与旁边的 `.zip.sha256` 文件比较，确认传输完整。
+可选：用 Windows PowerShell 的 `Get-FileHash -Algorithm SHA256 .\WoWFeTranslator-0.2.0-alpha.1.zip` 与旁边的 `.zip.sha256` 文件比较，确认传输完整。
 
 ## 3. 五分钟功能检查
 

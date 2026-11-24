@@ -1,6 +1,6 @@
 ## Interface: 16001
 ## Title: WoWFeTranslator - Sample Items
-## Version: 0.1.0-alpha.1
+## Version: 0.2.0-alpha.1
 ## Dependencies: WoWFeTranslator
 ## LoadOnDemand: 1
 
