@@ -7,6 +7,7 @@ import sys
 import zipfile
 
 import build
+import forever_api
 
 
 def run(*command):
@@ -21,6 +22,11 @@ def main():
     for folder in ("addon", "tests", "benchmarks"):
         for file in sorted((build.ROOT / folder).rglob("*.lua")):
             run("luac5.1", "-p", str(file))
+    problems = forever_api.scan_tree()
+    for path, line, message in problems:
+        print(f"{path}:{line}: {message}")
+    if problems:
+        raise SystemExit("Forever API check failed")
     run("lua5.1", "tests/runtime.lua")
     for toc in (build.ROOT / "addon").rglob("*.toc"):
         for line in toc.read_text().splitlines():
@@ -40,7 +46,7 @@ def main():
                       "WoWFeTranslator_Data_Items/WoWFeTranslator_Data_Items.toc"):
             assert entry in entries, "Missing install entry " + entry
         assert not any(p.endswith((".py", ".json")) for p in entries)
-    print(f"PASS Lua syntax, TOC paths, ZIP layout, licenses and byte-identical rebuild\n{archive}")
+    print(f"PASS Lua syntax, Forever API globals, TOC paths, ZIP layout, licenses and byte-identical rebuild\n{archive}")
 
 
 if __name__ == "__main__":
