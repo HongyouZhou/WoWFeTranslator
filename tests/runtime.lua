@@ -200,6 +200,17 @@ test("version comes from the TOC", function()
     assert(expected and A.version == expected)
     assert(A.Diagnostics:Report():find(expected, 1, true))
 end)
+test("engine profiler metrics only in the report", function()
+    local A = M.boot({profiler=true})
+    for i = 1, 20 do hover() end
+    assert(M.profilerCalls == 0)
+    local report = A.Diagnostics:Report()
+    assert(report:find("enabled=true", 1, true))
+    assert(report:find("WoWFeTranslator engine: recent=1.2500 session=0.2500 peak=4.2500 encounter=2.2500 over1ms=3 over5ms=3", 1, true))
+    assert(report:find("WoWFeTranslator_Data_Items engine: recent=0.0000", 1, true))
+    A = M.boot()
+    assert(A.Diagnostics:Report():find("Engine profiler: unavailable", 1, true))
+end)
 local function member(text, alphabet)
     for _, m in ipairs(text.fontObject.members) do
         if m.alphabet == alphabet then return m.file end

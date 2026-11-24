@@ -102,7 +102,7 @@ end
 function M.boot(options)
     options = options or {}
     M.frames, M.queue, M.callbacks = {}, {}, {}
-    M.loads, M.clockCalls, M.families = 0, 0, 0
+    M.loads, M.clockCalls, M.families, M.profilerCalls = 0, 0, 0, 0
     M.modernOnly, M.legacyOnly = options.modernOnly, options.legacyOnly
     M.combat, M.loadFailure = false, options.loadFailure
     _G.WoWFeTranslatorDB = options.saved
@@ -146,7 +146,17 @@ function M.boot(options)
         dofile("addon/WoWFeTranslator_Data_Items/Data.lua")
         return true
     end }
-    _G.Enum = { TooltipDataType = { Item = 0 } }
+    _G.Enum = { TooltipDataType = { Item = 0 }, AddOnProfilerMetric = {
+        SessionAverageTime = 0, RecentAverageTime = 1, EncounterAverageTime = 2,
+        LastTime = 3, PeakTime = 4, CountTimeOver1Ms = 5, CountTimeOver5Ms = 6 } }
+    _G.C_AddOnProfiler = options.profiler and {
+        IsEnabled = function() return true end,
+        GetAddOnMetric = function(name, metric)
+            M.profilerCalls = M.profilerCalls + 1
+            if metric >= 5 then return 3 end
+            return name == "WoWFeTranslator" and 0.25 + metric or 0
+        end,
+    } or nil
     _G.TooltipDataProcessor = not M.legacyOnly and { AddTooltipPostCall = function(_, f)
         M.callbacks[#M.callbacks + 1] = f
     end } or nil

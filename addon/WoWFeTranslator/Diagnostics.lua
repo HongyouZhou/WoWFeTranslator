@@ -32,6 +32,42 @@ function D:Finish(key, started)
     m.next = m.next % self.limit + 1
 end
 
+-- The client's own per-addon timing, read only for an explicit report. The engine
+-- bills a script handler to the addon that created its frame, so hook time on
+-- Blizzard tooltips may be missing here; the timings above are this addon's own.
+local ENGINE_METRICS = {
+    { "recent", "RecentAverageTime" }, { "session", "SessionAverageTime" },
+    { "peak", "PeakTime" }, { "encounter", "EncounterAverageTime" },
+    { "over1ms", "CountTimeOver1Ms", true }, { "over5ms", "CountTimeOver5Ms", true },
+}
+
+function D:EngineMetrics(lines)
+    local profiler = C_AddOnProfiler
+    local kinds = Enum and Enum.AddOnProfilerMetric
+    if not (profiler and profiler.GetAddOnMetric and kinds) then
+        lines[#lines + 1] = "Engine profiler: unavailable"
+        return
+    end
+    local enabled = true
+    if profiler.IsEnabled then
+        local ok, value = pcall(profiler.IsEnabled)
+        enabled = ok and value and true or false
+    end
+    lines[#lines + 1] = "Engine profiler (C_AddOnProfiler, ms) enabled=" .. tostring(enabled)
+    for _, name in ipairs({ A.name, "WoWFeTranslator_Data_Items" }) do
+        local parts = {}
+        for _, metric in ipairs(ENGINE_METRICS) do
+            local kind = kinds[metric[2]]
+            local ok, value = false, nil
+            if kind then ok, value = pcall(profiler.GetAddOnMetric, name, kind) end
+            if ok and type(value) == "number" then
+                parts[#parts + 1] = string.format(metric[3] and "%s=%d" or "%s=%.4f", metric[1], value)
+            end
+        end
+        lines[#lines + 1] = name .. " engine: " .. (#parts > 0 and table.concat(parts, " ") or "no data")
+    end
+end
+
 function D:Report()
     local version, build, _, interface = GetBuildInfo()
     local lines = {
@@ -68,6 +104,7 @@ function D:Report()
             lines[#lines + 1] = string.format("%s memory: %.1f KiB", name, memory(name) or 0)
         end
     end
+    self:EngineMetrics(lines)
     if A.settingsWarning then lines[#lines + 1] = A.settingsWarning end
     if A.fontWarning then lines[#lines + 1] = A.fontWarning end
     return table.concat(lines, "\n")
