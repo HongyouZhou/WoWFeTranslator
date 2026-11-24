@@ -24,7 +24,7 @@ python3 tools/build.py --package
 
 - `Core.lua`：账号设置、样式值校验、有效模式与刷新代数。
 - `Repository.lua`：按需加载数据插件、格式检查、按实体类型／数字 ID／语言查找；首版直接表查询，无额外名称缓存。
-- `Tooltips.lua`：只接入 GameTooltip 与 ItemRefTooltip，兼顾可用的物品 post-call 和旧脚本回调；同帧合并，重新读取当前物品，关闭／隐藏时使旧回调失效。
+- `Tooltips.lua`：只接入 GameTooltip 与 ItemRefTooltip，兼顾可用的物品 post-call 和旧脚本回调；同帧合并，重新读取当前物品。`SetOwner` 和隐藏视为新的提示框，立即清除显示并使旧回调失效；`OnTooltipCleared` 视为同一提示框刷新内容，只使旧回调失效，保留显示并在下一帧重新核对。判断是否显示使用 `IsVisible()`；物品 ID 优先取物品回调数据中的 `id`，其次取 `GetItem` 的第三个返回值，最后解析链接。
 - `Presenter.lua`：拥有自己的双语卡片，不改写原版标题、属性或按钮；每个支持的提示框最多一个卡片。
 - `UI.lua`：界面开关、三个模式、字号、颜色、自定义字体、两个悬停样例与诊断报告。
 - `Diagnostics.lua`：默认关闭，有界采样；只在显式报告动作中排序和查询内存。

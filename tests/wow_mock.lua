@@ -49,6 +49,12 @@ function W:HasScript(event) return event ~= "OnTooltipSetItem" or not M.modernOn
 function W:Show() self.shown = true end
 function W:Hide() self.shown = false; self:Fire("OnHide") end
 function W:IsShown() return self.shown end
+function W:IsVisible()
+    if not self.shown then return false end
+    return not self.parent or self.parent:IsVisible()
+end
+function W:SetParent(parent) self.parent = parent end
+function W:GetParent() return self.parent end
 function W:RegisterEvent(event) self.events[event] = true end
 function W:UnregisterEvent(event) self.events[event] = nil end
 function W:GetItem() return self.itemName, self.link end
@@ -57,12 +63,19 @@ function W:SetHyperlink(link)
     local id = tonumber(link:match("item:(%d+)"))
     M.item(self, id == 6948 and "Hearthstone" or "Unknown item", id)
 end
-function M.widget(name)
-    local widget = setmetatable({ name = name, shown = true, hooks = {}, scripts = {}, events = {} }, W)
+function M.widget(name, parent)
+    local widget = setmetatable({ name = name, parent = parent, shown = true,
+        hooks = {}, scripts = {}, events = {} }, W)
     M.frames[#M.frames + 1] = widget
     return widget
 end
+-- A new build: SetOwner, then content. Real clients clear and refill content.
 function M.item(tooltip, name, id)
+    tooltip:SetOwner(UIParent)
+    M.refresh(tooltip, name, id)
+end
+-- The same tooltip rebuilding its content without a new owner (periodic refresh).
+function M.refresh(tooltip, name, id)
     tooltip:Fire("OnTooltipCleared")
     tooltip.itemName = name
     tooltip.link = id and "|Hitem:" .. id .. "|h[" .. name .. "]|h"
@@ -90,12 +103,21 @@ function M.boot(options)
     M.combat, M.loadFailure = false, options.loadFailure
     _G.WoWFeTranslatorDB = options.saved
     _G.UIParent = M.widget("UIParent")
-    _G.GameTooltip = M.widget("GameTooltip")
-    _G.ItemRefTooltip = M.widget("ItemRefTooltip")
+    _G.GameTooltip = M.widget("GameTooltip", UIParent)
+    _G.ItemRefTooltip = M.widget("ItemRefTooltip", UIParent)
     GameTooltip:Hide(); ItemRefTooltip:Hide()
     _G.STANDARD_TEXT_FONT = "fallback.ttf"
     _G.ChatFontNormal = "ChatFontNormal"
-    _G.CreateFrame = function(_, name) return M.widget(name) end
+    _G.CreateFrame = function(_, name, parent) return M.widget(name, parent) end
+    _G.hooksecurefunc = function(target, name, hook)
+        if type(target) ~= "table" then target, name, hook = _G, target, name end
+        local original = target[name]
+        target[name] = function(...)
+            local results = { original(...) }
+            hook(...)
+            return unpack(results)
+        end
+    end
     _G.GetBuildInfo = function() return "1.60.1", "70790", "test", 16001 end
     _G.GetLocale = function() return "enUS" end
     _G.InCombatLockdown = function() return M.combat end
