@@ -84,6 +84,18 @@ class BuildTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, "duplicate JSON"):
                 build.load_source(path)
 
+    def test_version_comes_from_main_toc(self):
+        version = build.read_version()
+        data_toc = (build.ROOT / "addon" / build.DATA_ADDON / (build.DATA_ADDON + ".toc")).read_text()
+        self.assertIn("## Version: " + version + "\n", data_toc)
+        with tempfile.TemporaryDirectory() as directory:
+            toc = Path(directory) / build.MAIN_TOC
+            toc.parent.mkdir(parents=True)
+            for bad in ("## Title: x\n", "## Version: v1\n"):
+                toc.write_text(bad)
+                with self.assertRaises(ValueError):
+                    build.read_version(Path(directory))
+
     def test_checked_in_generated_data_current(self):
         source = build.load_source(build.ROOT / "data/sources/sample-items.json")
         output = build.ROOT / "addon/WoWFeTranslator_Data_Items/Data.lua"

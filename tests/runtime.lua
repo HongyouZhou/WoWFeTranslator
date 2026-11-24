@@ -191,6 +191,15 @@ test("item ID from tooltip data when the link has none", function()
     M.flush()
     assert(panel(A).right:GetText() == "炉石")
 end)
+test("version comes from the TOC", function()
+    local A = M.boot()
+    local expected
+    for line in io.lines("addon/WoWFeTranslator/WoWFeTranslator.toc") do
+        expected = expected or line:match("^## Version:%s*(.-)%s*$")
+    end
+    assert(expected and A.version == expected)
+    assert(A.Diagnostics:Report():find(expected, 1, true))
+end)
 local function member(text, alphabet)
     for _, m in ipairs(text.fontObject.members) do
         if m.alphabet == alphabet then return m.file end

@@ -1,7 +1,9 @@
 local addonName, A = ...
 _G.WoWFeTranslator = A
 A.name = addonName
-A.version = "0.1.0-alpha.1"
+-- The TOC's Version field is the only place the release version is kept.
+local metadata = C_AddOns and C_AddOns.GetAddOnMetadata or GetAddOnMetadata
+A.version = metadata and metadata(addonName, "Version") or "unknown"
 A.generation = 0
 A.font = "Interface\\AddOns\\WoWFeTranslator\\Fonts\\LXGWWenKaiLite-Regular.ttf"
 A.fonts = { A.font, A.font }

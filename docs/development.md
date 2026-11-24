@@ -21,6 +21,8 @@ python3 tools/build.py --package
 
 `tools/forever_api.py` 检查插件 Lua 中直接调用的旧全局函数（如 `GetItemInfo`、`LoadAddOn`、`GetSpellInfo`）。Forever 使用 12.1 引擎，不加载正式服保留这些函数的兼容插件，直接调用会报错，应改用 `C_Item`、`C_AddOns`、`C_Spell` 等命名空间接口。同一行内的判断（`X and X()`、`if X then`、`type(X)`）和作为备用值的读取（`C_AddOns.LoadAddOn or LoadAddOn`）允许通过；其他确认安全的情况可在该行加 `-- forever-api-ok: 原因`。检查按行进行，看不到前几行的判断。遇到缺少工具或测试失败会以非零状态退出。`--package` 单独运行会校验数据和字体，但不会替代完整测试。
 
+版本号只在主插件 TOC（`addon/WoWFeTranslator/WoWFeTranslator.toc`）的 `## Version:` 一处维护：`tools/build.py` 读取它来生成数据插件 TOC 和 ZIP 文件名，插件运行时通过 `C_AddOns.GetAddOnMetadata` 读取它用于界面和报告。发布新版本只需修改这一行。
+
 输出 ZIP 位于 `dist/`，包含两个直接可安装的插件目录，附 `.zip.sha256`；该目录不纳入 Git。测试 ZIP 不包含 Python、测试样例正文或开发工具。数据包的生成 Lua 文件纳入版本控制，用生成器更新，不手工编辑。
 
 ## 当前模块边界

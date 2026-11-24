@@ -11,8 +11,19 @@ import re
 import zipfile
 
 ROOT = Path(__file__).resolve().parents[1]
-VERSION = "0.1.0-alpha.1"
 DATA_ADDON = "WoWFeTranslator_Data_Items"
+MAIN_TOC = Path("addon/WoWFeTranslator/WoWFeTranslator.toc")
+
+
+def read_version(root=ROOT):
+    """The release version: the main addon TOC's Version field is the only source."""
+    for line in (root / MAIN_TOC).read_text(encoding="utf-8").splitlines():
+        if line.startswith("## Version:"):
+            version = line.split(":", 1)[1].strip()
+            require(re.fullmatch(r"\d+\.\d+\.\d+(?:-[0-9A-Za-z.]+)?", version) is not None,
+                    "invalid TOC version: " + version)
+            return version
+    raise ValueError("main TOC has no Version field")
 
 
 def canonical(value):
@@ -181,13 +192,14 @@ def load_source(path):
 
 
 def build(root=ROOT):
+    version = read_version(root)
     data = load_source(root / "data/sources/sample-items.json")
     generated = generate(data)
     folder = root / "addon" / DATA_ADDON
     folder.mkdir(parents=True, exist_ok=True)
     (folder / "Data.lua").write_text(generated, encoding="utf-8", newline="\n")
     toc = (f"## Interface: {data['interface']}\n## Title: WoWFeTranslator - Sample Items\n"
-           f"## Version: {VERSION}\n## Dependencies: WoWFeTranslator\n"
+           f"## Version: {version}\n## Dependencies: WoWFeTranslator\n"
            "## LoadOnDemand: 1\n\nData.lua\n")
     (folder / (DATA_ADDON + ".toc")).write_text(toc, encoding="utf-8", newline="\n")
     return data
@@ -199,7 +211,7 @@ def package(root=ROOT):
     require(hashlib.sha256(font.read_bytes()).hexdigest() ==
             "f799a538a3355877e597a0ae04050e897932c9ae7689eb9227c2953c5dd549ea", "font checksum mismatch")
     (root / "dist").mkdir(exist_ok=True)
-    archive = root / "dist" / f"WoWFeTranslator-{VERSION}.zip"
+    archive = root / "dist" / f"WoWFeTranslator-{read_version(root)}.zip"
     entries = {}
     for path in sorted((root / "addon").rglob("*")):
         if path.is_file() and path.suffix in (".lua", ".toc", ".ttf", ".txt"):

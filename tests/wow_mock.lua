@@ -135,7 +135,12 @@ function M.boot(options)
     _G.issecretvalue = function(v) return v == M.secret end
     _G.C_Timer = { After = function(_, callback) M.queue[#M.queue + 1] = callback end }
     _G.debugprofilestop = function() M.clockCalls = M.clockCalls + 1; return M.clockCalls * 0.001 end
-    _G.C_AddOns = { LoadAddOn = function()
+    _G.C_AddOns = { GetAddOnMetadata = function(name, field)
+        for line in io.lines("addon/" .. name .. "/" .. name .. ".toc") do
+            local value = line:match("^## " .. field .. ":%s*(.-)%s*$")
+            if value then return value end
+        end
+    end, LoadAddOn = function()
         M.loads = M.loads + 1
         if M.loadFailure then return false, "DISABLED" end
         dofile("addon/WoWFeTranslator_Data_Items/Data.lua")
