@@ -30,6 +30,32 @@ git pull --ff-only
 
 然后退出游戏，备份并替换游戏目录中这两个插件文件夹，再启动游戏。只执行 `git pull` 不会自动更新已经复制到游戏目录的文件。不要把整个 Git 仓库放进 AddOns；本机账号设置仍由游戏保存，不纳入 Git。遇到本地修改导致 pull 拒绝时先保留修改，不要直接强制覆盖。
 
+### 用目录联接代替复制（可选）
+
+在 `AddOns` 中为两个插件目录创建指向仓库的目录联接（junction），以后 `git pull --ff-only` 后不再需要复制，`/reload` 即可加载新的 Lua 文件；TOC 有变化时（例如新增文件）需要完全重启游戏。目录联接不需要管理员权限，只能指向本机磁盘上的目录。
+
+退出游戏后，在 PowerShell 中按实际位置修改前两行再运行。Forever 实例的位置以第 2 节确认的结果为准：
+
+```powershell
+$Repo   = "C:\Users\你的用户名\source\WoWFeTranslator"
+$AddOns = "D:\Games\World of Warcraft\_forever_\Interface\AddOns"
+foreach ($name in "WoWFeTranslator", "WoWFeTranslator_Data_Items") {
+    $link = Join-Path $AddOns $name
+    # 已有的复制版先改名备份；同名备份已存在时这一步会报错，请先处理旧备份。
+    if (Test-Path $link) { Rename-Item $link "$name.bak" }
+    New-Item -ItemType Junction -Path $link -Target (Join-Path $Repo "addon\$name") | Out-Null
+}
+Get-Item (Join-Path $AddOns "WoWFeTranslator*") | Select-Object Name, LinkType, Target
+```
+
+最后一条命令应列出两个 `LinkType` 为 `Junction` 的目录，`Target` 指向仓库的 `addon` 子目录。确认插件正常后，再删除 `.bak` 备份目录。
+
+注意：
+
+- 删除联接请用 `cmd /c rmdir "<AddOns 路径>\WoWFeTranslator"`，它只删除联接本身。不要用 `Remove-Item -Recurse` 或其他递归删除命令，可能连仓库里的文件一起删掉。
+- 游戏运行时执行 `git pull` 不会立即生效，需要 `/reload`；拉取前最好先退出游戏或至少不在战斗中。
+- 不要把整个仓库联接或复制到 `AddOns`，只联接这两个目录。
+
 ### 传输 ZIP
 
 开发机的文件是 `dist/WoWFeTranslator-0.2.0-alpha.1.zip`。通过你现有的文件传输方式、共享文件夹或 U 盘复制到 Windows；Windows 端无需 Git、Python 或 Lua 解释器。不必将开发仓库整个复制过去。
