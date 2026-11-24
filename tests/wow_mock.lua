@@ -27,7 +27,11 @@ function W:SetFocus() end
 function W:ClearFocus() end
 function W:HighlightText() end
 function W:SetScrollChild(child) self.child = child end
-function W:SetFont(font, size) self.font, self.fontSize = font, size; return font ~= "bad.ttf" end
+function W:SetFont(font, size) self.font, self.fontSize, self.fontObject = font, size, nil; return font ~= "bad.ttf" end
+function W:SetFontObject(object)
+    self.fontObject, self.font = object, nil
+    if type(object) == "table" and object.members then self.fontSize = object.members[1].height end
+end
 function W:SetText(text) self.text = text end
 function W:GetText() return self.text end
 function W:GetStringHeight() return self.fontSize or 12 end
@@ -98,7 +102,7 @@ end
 function M.boot(options)
     options = options or {}
     M.frames, M.queue, M.callbacks = {}, {}, {}
-    M.loads, M.clockCalls = 0, 0
+    M.loads, M.clockCalls, M.families = 0, 0, 0
     M.modernOnly, M.legacyOnly = options.modernOnly, options.legacyOnly
     M.combat, M.loadFailure = false, options.loadFailure
     _G.WoWFeTranslatorDB = options.saved
@@ -107,6 +111,13 @@ function M.boot(options)
     _G.ItemRefTooltip = M.widget("ItemRefTooltip", UIParent)
     GameTooltip:Hide(); ItemRefTooltip:Hide()
     _G.STANDARD_TEXT_FONT = "fallback.ttf"
+    _G.GameFontNormal = { GetFontObjectForAlphabet = function(_, alphabet)
+        return { GetFont = function() return "client-" .. alphabet .. ".ttf", 12, "" end }
+    end }
+    _G.CreateFontFamily = not options.noFontFamily and function(name, members)
+        M.families = M.families + 1
+        return { name = name, members = members }
+    end or nil
     _G.ChatFontNormal = "ChatFontNormal"
     _G.CreateFrame = function(_, name, parent) return M.widget(name, parent) end
     _G.hooksecurefunc = function(target, name, hook)

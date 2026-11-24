@@ -38,7 +38,8 @@ function D:Report()
         "WoWFeTranslator " .. A.version,
         string.format("Client %s / %s / Interface %s / %s", version, build, interface, GetLocale()),
         "Mode=" .. A.db.mode .. " enabled=" .. tostring(A.db.enabled),
-        "Font=" .. A.fonts[A.db.fontIndex] .. " size=" .. A.db.fontSize,
+        "Font=" .. A.fonts[A.db.fontIndex] .. " size=" .. A.db.fontSize
+            .. " render=" .. (A.Fonts.mode or "not yet"),
         "Hooks=" .. (A.Tooltips.hookStatus or "unavailable"),
         "Data=" .. A.Repository.status .. " revision=" .. (A.Repository.revision or "not loaded"),
         "Diagnostics=" .. tostring(self.enabled) .. "; milliseconds; P95=latest <=256 samples",

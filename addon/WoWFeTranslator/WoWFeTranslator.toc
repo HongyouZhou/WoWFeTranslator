@@ -7,6 +7,7 @@
 
 Core.lua
 Diagnostics.lua
+Fonts.lua
 Repository.lua
 Presenter.lua
 Tooltips.lua

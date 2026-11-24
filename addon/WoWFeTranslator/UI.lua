@@ -106,11 +106,11 @@ function UI:Create()
             color:ClearFocus()
         end
     end)
-    label(panel, "Custom font path (must contain Chinese glyphs)", 16, -208)
+    label(panel, "English font path (Chinese always uses the bundled font)", 16, -208)
     local font = edit(panel, 22, -232, 394, A.db.customFont)
     font:SetMaxLetters(240)
     button(panel, "Use bundled font", 16, -264, 195, function() A.SetFont(1) end)
-    button(panel, "Apply custom font", 224, -264, 198, function()
+    button(panel, "Apply English font", 224, -264, 198, function()
         local path = font:GetText()
         if path ~= "" then
             A.db.customFont, A.fonts[2] = path, path

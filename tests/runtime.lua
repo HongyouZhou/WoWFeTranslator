@@ -191,4 +191,47 @@ test("item ID from tooltip data when the link has none", function()
     M.flush()
     assert(panel(A).right:GetText() == "炉石")
 end)
+local function member(text, alphabet)
+    for _, m in ipairs(text.fontObject.members) do
+        if m.alphabet == alphabet then return m.file end
+    end
+end
+test("font family: English font for Latin, bundled font for Chinese", function()
+    local A = M.boot()
+    hover()
+    local left, right = panel(A).left, panel(A).right
+    assert(right.fontObject and right.fontObject == left.fontObject and A.Fonts.mode == "family")
+    assert(member(right, "roman") == A.font and member(right, "simplifiedchinese") == A.font)
+    assert(member(right, "traditionalchinese") == A.font)
+    assert(member(right, "korean") == "client-korean.ttf")
+    A.db.customFont, A.fonts[2] = "Latin.ttf", "Latin.ttf"
+    A.SetFont(2)
+    hover()
+    assert(member(panel(A).right, "roman") == "Latin.ttf")
+    assert(member(panel(A).right, "simplifiedchinese") == A.font)
+end)
+test("unloadable English font falls back to the bundled font and warns", function()
+    local A = M.boot()
+    A.fonts[2] = "bad.ttf"
+    A.SetFont(2)
+    hover()
+    assert(member(panel(A).right, "roman") == A.font)
+    assert(A.Diagnostics:Report():find("English font failed"))
+end)
+test("font families are created once per English font and size", function()
+    local A = M.boot()
+    for i = 1, 3 do
+        A.SetSize(20); hover()
+        A.SetSize(16); hover()
+    end
+    assert(M.families == 2)
+end)
+test("without font families each column gets a plain font", function()
+    local A = M.boot({noFontFamily=true})
+    A.fonts[2] = "Latin.ttf"
+    A.SetFont(2)
+    hover()
+    assert(panel(A).left.font == "Latin.ttf" and panel(A).right.font == A.font)
+    assert(A.Fonts.mode == "plain")
+end)
 print(string.format("%d runtime tests passed (mock environment, not game validation)", total))

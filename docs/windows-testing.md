@@ -86,7 +86,9 @@ git pull --ff-only
 
 再测试背包中的炉石、亚麻布等样例，以及聊天中的已知物品链接：鼠标悬停使用 GameTooltip，点击物品链接使用 ItemRefTooltip。比较装备专用提示框等其他界面暂不支持。首次物品信息未缓存时，等原版信息出现后重新悬停。
 
-自定义字体：将你有权使用、包含中文字形的字体放进此插件的 Fonts 目录，输入游戏内相对路径，例如 `Interface\AddOns\WoWFeTranslator\Fonts\MyFont.ttf`，点击 `Apply custom font`。新放入字体后完全重启游戏再测试。若出现方框，点击 `Use bundled font` 恢复；路径存在不代表字体包含中文字形。
+英文字体：中文始终使用随包字体，设置里只能更换英文部分的字体，字体文件不需要包含中文字形。将你有权使用的字体放进此插件的 Fonts 目录，输入游戏内相对路径，例如 `Interface\AddOns\WoWFeTranslator\Fonts\MyFont.ttf`，点击 `Apply English font`。新放入字体后完全重启游戏再测试。路径无法加载时，英文会回退到随包字体，报告中出现 `English font failed to load`。
+
+字体检查：换成一种只有拉丁字母的英文字体（例如游戏自带的 `Fonts\FRIZQT__.TTF`），卡片中文仍应正常显示，没有方框。报告中 `Font=` 一行末尾的 `render=family` 表示使用了字体族；如果是 `render=plain`，说明客户端不支持字体族，英文和中文分别用各自的字体，请在反馈中注明。
 
 ## 4. 设置保存与边界检查
 
@@ -142,7 +144,7 @@ git pull --ff-only
 | 没有 WFT 按钮 | 主插件是否启用、是否有初始化错误 |
 | 炉石有原版提示但无中文 | 总开关、模式、两个插件是否启用；报告中的 Hooks、Data 和客户端信息 |
 | `load failed: DISABLED` 或其他加载错误 | 启用或修复数据包后 `/reload`；失败不会在每次悬停无限重试 |
-| 中文方框或乱码 | Fonts 文件是否齐全、是否使用自定义字体，先恢复随包字体 |
+| 中文方框或乱码 | Fonts 文件是否齐全；报告中是否有 `Bundled font failed to load`，以及 `render=` 的值 |
 | 大多数物品没有翻译 | 此包只有 13 条，这是预期覆盖范围 |
 | 报告 `deferred in combat` | 脱战后重新悬停；若仍不恢复，反馈报告 |
 

@@ -30,13 +30,8 @@ function P:Show(state, english, translated, key)
         state.panel = panel
     end
     local panel = state.panel
-    local font = A.fonts[A.db.fontIndex]
-    for _, text in ipairs({ panel.left, panel.right }) do
-        if not text:SetFont(font, A.db.fontSize, "") then
-            text:SetFont(STANDARD_TEXT_FONT, A.db.fontSize, "")
-            A.fontWarning = "Selected font failed to load. Check Fonts folder."
-        end
-    end
+    A.Fonts:Apply(panel.left, A.db.fontSize, false)
+    A.Fonts:Apply(panel.right, A.db.fontSize, true)
     panel.left:SetTextColor(1, 1, 1)
     panel.right:SetTextColor(unpack(A.db.color))
     panel.left:SetText(english)
