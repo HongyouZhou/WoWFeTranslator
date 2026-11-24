@@ -68,12 +68,22 @@ function D:EngineMetrics(lines)
     end
 end
 
+-- item=name spell=unavailable ...: each module's effective feature or why not.
+function D:FeatureLine()
+    local parts = {}
+    for _, module in ipairs(A.MODULES) do
+        parts[#parts + 1] = module .. "=" .. tostring(A.features[module] or A.reasons[module])
+    end
+    return table.concat(parts, " ")
+end
+
 function D:Report()
     local version, build, _, interface = GetBuildInfo()
     local lines = {
         "WoWFeTranslator " .. A.version,
         string.format("Client %s / %s / Interface %s / %s", version, build, interface, GetLocale()),
         "Mode=" .. A.db.mode .. " enabled=" .. tostring(A.db.enabled),
+        "Features=" .. D:FeatureLine(),
         "Font=" .. A.fonts[A.db.fontIndex] .. " size=" .. A.db.fontSize
             .. " render=" .. (A.Fonts.mode or "not yet"),
         "Hooks=" .. (A.Tooltips.hookStatus or "unavailable"),

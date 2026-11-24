@@ -8,6 +8,23 @@ A.generation = 0
 A.font = "Interface\\AddOns\\WoWFeTranslator\\Fonts\\LXGWWenKaiLite-Regular.ttf"
 A.fonts = { A.font, A.font }
 A.modes = { story = true, minimal = true, pvp = true }
+A.SCHEMA = 2
+
+-- Effective features come from four layers: the master switch, the mode preset,
+-- the module preferences and what is implemented. They are worked out once per
+-- change into A.features; hooks read only their own module's entry.
+A.MODULES = { "item", "spell", "npc", "quest" }
+-- What each mode asks of a module: "full" (names and details), "name", or false.
+local PRESETS = {
+    story = { item = "full", spell = "full", npc = "name", quest = "full" },
+    minimal = { item = "name", spell = "name", npc = "name", quest = false },
+    pvp = {},
+}
+-- What is implemented, per module. A module with nothing here shows as not
+-- implemented and cannot be switched on.
+A.capabilities = { item = { name = true } }
+A.features, A.reasons = {}, {}
+A.featureRevision = 0
 
 function A.Readable(value)
     if issecretvalue and issecretvalue(value) then return false end
@@ -22,7 +39,7 @@ end
 function A.InitSettings(saved)
     -- Never modify an unknown future schema on a downgrade.
     if type(saved) == "table" and type(saved.schemaVersion) == "number"
-        and saved.schemaVersion > 1 then
+        and saved.schemaVersion > A.SCHEMA then
         A.settingsWarning = "Newer settings schema: using temporary defaults."
         saved = nil
     else
@@ -30,7 +47,8 @@ function A.InitSettings(saved)
         _G.WoWFeTranslatorDB = saved
     end
     local db = saved or {}
-    db.schemaVersion = 1
+    -- v1 -> v2 adds module and adapter preferences; everything else carries over.
+    db.schemaVersion = A.SCHEMA
     if type(db.enabled) ~= "boolean" then db.enabled = true end
     if not A.modes[db.mode] then db.mode = "story" end
     db.sourceLocale, db.targetLocale = "enUS", "zhCN"
@@ -43,14 +61,60 @@ function A.InitSettings(saved)
     for i, default in ipairs({ 1, 0.82, 0 }) do
         db.color[i] = bounded(db.color[i], default, 0, 1)
     end
+    if type(db.modules) ~= "table" then db.modules = {} end
+    for _, module in ipairs(A.MODULES) do
+        if type(db.modules[module]) ~= "boolean" then db.modules[module] = true end
+    end
+    if type(db.adapters) ~= "table" then db.adapters = {} end
+    for key, value in pairs(db.adapters) do
+        if type(key) ~= "string" or type(value) ~= "boolean" then db.adapters[key] = nil end
+    end
     A.db = db
+    A.ComputeFeatures()
 end
 
+-- The presentation a module gets ("full", "name") or false, and why not:
+-- "off" (master switch), "mode" (the mode pauses it), "module" (switched off by
+-- the player) or "unavailable" (not implemented).
+local function resolve(module)
+    local db = A.db
+    if not db.enabled then return false, "off" end
+    local wanted = (PRESETS[db.mode] or {})[module]
+    if not wanted then return false, "mode" end
+    local can = A.capabilities[module]
+    if not can then return false, "unavailable" end
+    if not db.modules[module] then return false, "module" end
+    if can[wanted] then return wanted, nil end
+    if wanted == "full" and can.name then return "name", nil end
+    return false, "unavailable"
+end
+
+function A.ComputeFeatures()
+    for _, module in ipairs(A.MODULES) do
+        A.features[module], A.reasons[module] = resolve(module)
+    end
+    A.featureRevision = A.featureRevision + 1
+end
+
+function A.Feature(module)
+    return A.features[module]
+end
+
+-- Whether anything translates at all (launcher state, refresh).
 function A.Active()
-    return A.db and A.db.enabled and A.db.mode ~= "pvp"
+    if not A.db then return false end
+    for _, module in ipairs(A.MODULES) do
+        if A.features[module] then return true end
+    end
+    return false
+end
+
+function A.Implemented(module)
+    return A.capabilities[module] ~= nil
 end
 
 function A.Changed()
+    A.ComputeFeatures()
     A.generation = A.generation + 1
     if A.Tooltips then A.Tooltips:Refresh() end
     if A.UI then A.UI:Update() end
@@ -59,6 +123,14 @@ end
 function A.SetEnabled(value)
     A.db.enabled = not not value
     A.Changed()
+end
+
+-- Unimplemented modules keep their stored preference and cannot be changed.
+function A.SetModule(module, value)
+    if not A.Implemented(module) or A.db.modules[module] == nil then return false end
+    A.db.modules[module] = not not value
+    A.Changed()
+    return true
 end
 
 function A.SetMode(mode)

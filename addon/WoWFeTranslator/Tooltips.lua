@@ -2,6 +2,9 @@ local _, A = ...
 local T = { states = {} }
 A.Tooltips = T
 
+-- The item module's effective feature: one table read per callback.
+local function itemOn() return A.features.item end
+
 -- A new tooltip build starts at SetOwner; the same tooltip refreshing its
 -- content (bag and action buttons re-set it periodically) only fires
 -- OnTooltipCleared and the data callbacks again. Only a new build or a hide
@@ -23,7 +26,7 @@ function T:Cleared(state)
     state.serial = state.serial + 1
     state.pending = nil
     state.dataId = nil
-    if A.Active() and state.tooltip:IsVisible() then self:Queue(state) end
+    if itemOn() and state.tooltip:IsVisible() then self:Queue(state) end
 end
 
 local function readableNumber(value)
@@ -34,7 +37,7 @@ function T:Process(state)
     if state.tooltip.IsForbidden and state.tooltip:IsForbidden() then return end
     -- IsVisible, not IsShown: a UI suite may hide the tooltip by parenting it
     -- to a hidden frame while it stays shown.
-    if not A.Active() or not state.tooltip:IsVisible() then A.Presenter:Hide(state); return end
+    if not itemOn() or not state.tooltip:IsVisible() then A.Presenter:Hide(state); return end
     local started = A.Diagnostics:Start()
     local name, link, shownId = state.tooltip:GetItem()
     if not A.Readable(name) or not A.Readable(link) then
@@ -69,7 +72,7 @@ end
 
 function T:Queue(state)
     local started = A.Diagnostics:Start()
-    if not A.Active() then
+    if not itemOn() then
         A.Diagnostics:Count("disabled_callback")
         A.Diagnostics:Finish("callback", started)
         return
@@ -81,7 +84,7 @@ function T:Queue(state)
         C_Timer.After(0, function()
             if state.pending ~= serial then return end
             state.pending = nil
-            if state.serial ~= serial or generation ~= A.generation or not A.Active() then return end
+            if state.serial ~= serial or generation ~= A.generation or not itemOn() then return end
             T:Process(state)
         end)
     else
@@ -93,7 +96,7 @@ end
 function T:Refresh()
     for _, state in pairs(self.states) do
         self:Clear(state)
-        if A.Active() and state.tooltip:IsVisible() then self:Queue(state) end
+        if itemOn() and state.tooltip:IsVisible() then self:Queue(state) end
     end
 end
 

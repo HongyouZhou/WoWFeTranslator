@@ -73,16 +73,28 @@ function UI:Report()
     self.reportText:HighlightText()
 end
 
+local MODULE_LABELS = { item = "Items", spell = "Spells", npc = "NPCs", quest = "Quests" }
+
+-- ON: translating. OFF: the player switched the module off. paused: switched on
+-- but the master switch or the mode stops it. n/a: not implemented yet.
+function UI.ModuleText(module)
+    local name = MODULE_LABELS[module]
+    if not A.Implemented(module) then return name .. ": n/a" end
+    if not A.db.modules[module] then return name .. ": OFF" end
+    return name .. (A.Feature(module) and ": ON" or ": paused")
+end
+
 function UI:Update()
     if not self.panel then return end
     self.toggle:SetText(A.db.enabled and "Translation: ON" or "Translation: OFF")
+    for module, b in pairs(self.modules) do b:SetText(UI.ModuleText(module)) end
     self.status:SetText("Mode: " .. A.db.mode .. " | Size: " .. A.db.fontSize .. " | enUS > zhCN")
     self.diagnostics:SetText(A.Diagnostics.enabled and "Diagnostics: ON" or "Diagnostics: OFF")
     self.launcher:SetText(A.Active() and "WFT: ON" or "WFT: OFF")
 end
 
 function UI:Create()
-    local panel = window("WoWFeTranslatorSettings", 440, 430)
+    local panel = window("WoWFeTranslatorSettings", 440, 464)
     self.panel = panel
     label(panel, "WoWFeTranslator " .. A.version, 16, -16)
     label(panel, "Item names only - small internal test dictionary", 16, -43)
@@ -91,14 +103,22 @@ function UI:Create()
     for i, mode in ipairs({ "story", "minimal", "pvp" }) do
         button(panel, mode, 16 + (i - 1) * 136, -134, 128, function() A.SetMode(mode) end)
     end
-    label(panel, "Font size", 16, -176, 95)
-    button(panel, "-", 110, -168, 38, function() A.SetSize(A.db.fontSize - 1) end)
-    button(panel, "+", 154, -168, 38, function() A.SetSize(A.db.fontSize + 1) end)
-    label(panel, "Color #", 212, -176, 65)
-    local color = edit(panel, 280, -168, 66, string.format("%02X%02X%02X",
+    self.modules = {}
+    for i, module in ipairs(A.MODULES) do
+        local b = button(panel, "", 16 + (i - 1) * 102, -168, 98, function()
+            A.SetModule(module, not A.db.modules[module])
+        end)
+        if not A.Implemented(module) then b:Disable() end
+        self.modules[module] = b
+    end
+    label(panel, "Font size", 16, -210, 95)
+    button(panel, "-", 110, -202, 38, function() A.SetSize(A.db.fontSize - 1) end)
+    button(panel, "+", 154, -202, 38, function() A.SetSize(A.db.fontSize + 1) end)
+    label(panel, "Color #", 212, -210, 65)
+    local color = edit(panel, 280, -202, 66, string.format("%02X%02X%02X",
         math.floor(A.db.color[1] * 255), math.floor(A.db.color[2] * 255), math.floor(A.db.color[3] * 255)))
     color:SetMaxLetters(6)
-    button(panel, "Apply", 354, -168, 68, function()
+    button(panel, "Apply", 354, -202, 68, function()
         local value = color:GetText()
         if value:match("^%x%x%x%x%x%x$") then
             A.SetColor(tonumber(value:sub(1, 2), 16) / 255,
@@ -106,11 +126,11 @@ function UI:Create()
             color:ClearFocus()
         end
     end)
-    label(panel, "English font path (Chinese always uses the bundled font)", 16, -208)
-    local font = edit(panel, 22, -232, 394, A.db.customFont)
+    label(panel, "English font path (Chinese always uses the bundled font)", 16, -242)
+    local font = edit(panel, 22, -266, 394, A.db.customFont)
     font:SetMaxLetters(240)
-    button(panel, "Use bundled font", 16, -264, 195, function() A.SetFont(1) end)
-    button(panel, "Apply English font", 224, -264, 198, function()
+    button(panel, "Use bundled font", 16, -298, 195, function() A.SetFont(1) end)
+    button(panel, "Apply English font", 224, -298, 198, function()
         local path = font:GetText()
         if path ~= "" then
             A.db.customFont, A.fonts[2] = path, path
@@ -118,27 +138,27 @@ function UI:Create()
             font:ClearFocus()
         end
     end)
-    local sample = button(panel, "Hover: Hearthstone", 16, -302, 195)
+    local sample = button(panel, "Hover: Hearthstone", 16, -336, 195)
     sample:SetScript("OnEnter", function(self)
         GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
         GameTooltip:SetHyperlink("item:6948")
         GameTooltip:Show()
     end)
     sample:SetScript("OnLeave", function() GameTooltip:Hide() end)
-    local missing = button(panel, "Hover: no translation", 224, -302, 198)
+    local missing = button(panel, "Hover: no translation", 224, -336, 198)
     missing:SetScript("OnEnter", function(self)
         GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
         GameTooltip:SetHyperlink("item:117")
         GameTooltip:Show()
     end)
     missing:SetScript("OnLeave", function() GameTooltip:Hide() end)
-    self.diagnostics = button(panel, "", 16, -342, 195, function()
+    self.diagnostics = button(panel, "", 16, -376, 195, function()
         A.Diagnostics.enabled = not A.Diagnostics.enabled
         UI:Update()
     end)
-    button(panel, "Copy report", 224, -342, 198, function() UI:Report() end)
-    button(panel, "Reset measurements", 16, -378, 195, function() A.Diagnostics:Reset() end)
-    label(panel, "Story/minimal: names only in alpha", 224, -383, 195)
+    button(panel, "Copy report", 224, -376, 198, function() UI:Report() end)
+    button(panel, "Reset measurements", 16, -412, 195, function() A.Diagnostics:Reset() end)
+    label(panel, "Story/minimal: names only in alpha", 224, -417, 195)
     local launcher = button(UIParent, "WFT", 0, 0, 90, function()
         if panel:IsShown() then panel:Hide() else panel:Show() end
     end)

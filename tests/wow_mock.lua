@@ -53,6 +53,9 @@ function W:HasScript(event) return event ~= "OnTooltipSetItem" or not M.modernOn
 function W:Show() self.shown = true end
 function W:Hide() self.shown = false; self:Fire("OnHide") end
 function W:IsShown() return self.shown end
+function W:Disable() self.disabled = true end
+function W:Enable() self.disabled = nil end
+function W:IsEnabled() return not self.disabled end
 function W:IsVisible()
     if not self.shown then return false end
     return not self.parent or self.parent:IsVisible()
