@@ -5,11 +5,23 @@ import subprocess
 import tempfile
 import unittest
 
-from tools import build
+from tools import build, import_items
+
+STUB = ("WoWFeTranslator={names={},RegisterNames=function(m) local t={} WoWFeTranslator.names[m.kind]=t "
+        "WoWFeTranslator.meta=m return t end,FinishNames=function(k,l) local n=0 "
+        "for _ in pairs(WoWFeTranslator.names[k]) do n=n+1 end assert(n==WoWFeTranslator.meta.count) "
+        "WoWFeTranslator.done=k..l end}\n")
+
+
+def run_lua(source, check):
+    with tempfile.TemporaryDirectory() as directory:
+        path = Path(directory) / "pack.lua"
+        path.write_text(STUB + source + check, encoding="utf-8")
+        subprocess.run(["lua5.1", str(path)], check=True)
 
 
 def fixture():
-    data = build.load_source(build.ROOT / "data/sources/sample-items.json")
+    data = build.load_source(build.ROOT / "tests/fixtures/sample-items.json")
     data["terms"] = [{"key": "item.hearthstone", "names": {"enUS": "Hearthstone", "zhCN": "炉石"},
                       "aliases": {"enUS": ["hearthstone"]}, "source": "manual-sample",
                       "entity": {"type": "item", "id": 6948}}]
@@ -27,15 +39,24 @@ def fixture():
 
 
 class BuildTests(unittest.TestCase):
-    def test_multilingual_entities_terms_texts_roundtrip(self):
+    def test_names_pack_roundtrip(self):
+        # Terms and texts are validated but stay in the source; the pack carries names only.
         generated = build.generate(fixture())
-        with tempfile.TemporaryDirectory() as directory:
-            path = Path(directory) / "data.lua"
-            path.write_text("WoWFeTranslator={RegisterData=function(p)\n"
-                            "assert(p.entities.item[6948].names.zhCN=='炉石')\n"
-                            "assert(p.texts['test.example'].content.enUS[1].parts[1].variable=='player')\n"
-                            "assert(p.terms['item.hearthstone'].entity.id==6948)\nend}\n" + generated)
-            subprocess.run(["lua5.1", str(path)], check=True)
+        self.assertNotIn("Hearthstone", generated)
+        run_lua(generated, "assert(WoWFeTranslator.names.item[6948]=='炉石')\n"
+                           "assert(WoWFeTranslator.meta.schemaVersion==2 and WoWFeTranslator.done=='itemzhCN')\n")
+
+    def test_large_pack_is_chunked_under_lua_limits(self):
+        data = fixture()
+        data["texts"], data["terms"] = [], []
+        data["entities"] = [{"type": "item", "id": i, "names": {"enUS": f"Item {i}", "zhCN": f"物品{i}"},
+                             "source": "manual-sample"} for i in range(1, 100001)]
+        generated = build.generate(data)
+        self.assertEqual(generated.count("function(t)"), 50)
+        run_lua(generated, "assert(WoWFeTranslator.names.item[100000]=='物品100000')\n")
+        small = build.generate(data | {"entities": data["entities"][:7]}, chunk=3)
+        self.assertEqual(small.count("function(t)"), 3)
+        run_lua(small, "assert(WoWFeTranslator.names.item[7]=='物品7')\n")
 
     def test_stable_generation_and_revision_change(self):
         data = fixture()
@@ -97,9 +118,37 @@ class BuildTests(unittest.TestCase):
                     build.read_version(Path(directory))
 
     def test_checked_in_generated_data_current(self):
-        source = build.load_source(build.ROOT / "data/sources/sample-items.json")
-        output = build.ROOT / "addon/WoWFeTranslator_Data_Items/Data.lua"
+        source = build.load_source(build.ROOT / build.SOURCE)
+        output = build.ROOT / "addon" / build.DATA_ADDON / "Data.lua"
         self.assertEqual(build.generate(source), output.read_text())
+
+
+class ImportTests(unittest.TestCase):
+    CSV_EN = "ID,Display_lang\n25,Worn Shortsword\n26,Unused Thing\n27,\n28,Only English\n"
+    CSV_ZH = "ID,Display_lang\n25,破损的短剑\n26,Unused Thing\n27,孤儿\n29,无英文\n"
+
+    def test_only_items_with_english_and_chinese_names(self):
+        english = import_items.rows(self.CSV_EN.encode(), "Display_lang")
+        chinese = import_items.rows(self.CSV_ZH.encode(), "Display_lang")
+        items = import_items.entities(english, chinese, "s")
+        self.assertEqual([(e["id"], e["names"]["zhCN"]) for e in items], [(25, "破损的短剑")])
+
+    def test_written_source_is_valid_and_reloads(self):
+        english = import_items.rows(self.CSV_EN.encode(), "Display_lang")
+        chinese = import_items.rows(self.CSV_ZH.encode(), "Display_lang")
+        doc = import_items.document(import_items.entities(english, chinese, ""), "1.60.1.1",
+                                    {"enUS": "a", "zhCN": "b"})
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "items.json"
+            import_items.write(doc, path)
+            loaded = build.load_source(path)
+        self.assertEqual(loaded, doc)
+        build.validate(loaded)
+
+    def test_checked_in_source_matches_its_build(self):
+        data = build.load_source(build.ROOT / build.SOURCE)
+        self.assertEqual(list(data["sources"]), ["forever-db2-" + import_items.BUILD])
+        self.assertGreater(len(data["entities"]), 17000)
 
 
 if __name__ == "__main__":

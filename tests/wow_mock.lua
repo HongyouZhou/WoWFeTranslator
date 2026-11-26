@@ -191,7 +191,7 @@ function M.boot(options)
     end, LoadAddOn = function()
         M.loads = M.loads + 1
         if M.loadFailure then return false, "DISABLED" end
-        dofile("addon/WoWFeTranslator_Data_Items/Data.lua")
+        dofile("addon/WoWFeTranslator_Data_Names/Data.lua")
         return true
     end }
     _G.Enum = { TooltipDataType = { Item = 0 }, AddOnProfilerMetric = {

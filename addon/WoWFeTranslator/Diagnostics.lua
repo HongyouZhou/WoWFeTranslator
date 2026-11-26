@@ -54,7 +54,7 @@ function D:EngineMetrics(lines)
         enabled = ok and value and true or false
     end
     lines[#lines + 1] = "Engine profiler (C_AddOnProfiler, ms) enabled=" .. tostring(enabled)
-    for _, name in ipairs({ A.name, "WoWFeTranslator_Data_Items" }) do
+    for _, name in ipairs({ A.name, A.Repository.packs.names.addon }) do
         local parts = {}
         for _, metric in ipairs(ENGINE_METRICS) do
             local kind = kinds[metric[2]]
@@ -87,7 +87,7 @@ function D:Report()
         "Font=" .. A.fonts[A.db.fontIndex] .. " size=" .. A.db.fontSize
             .. " render=" .. (A.Fonts.mode or "not yet"),
         "Hooks=" .. (A.Tooltips.hookStatus or "unavailable"),
-        "Data=" .. A.Repository.status .. " revision=" .. (A.Repository.revision or "not loaded"),
+        "Data=" .. A.Repository:Status(),
         "Diagnostics=" .. tostring(self.enabled) .. "; milliseconds; P95=latest <=256 samples",
     }
     if tonumber(interface) ~= 16001 then
@@ -110,7 +110,7 @@ function D:Report()
     local memory = C_AddOns and C_AddOns.GetAddOnMemoryUsage or GetAddOnMemoryUsage
     if update and memory then
         update() -- Explicit report request only; never in a tooltip callback.
-        for _, name in ipairs({ A.name, "WoWFeTranslator_Data_Items" }) do
+        for _, name in ipairs({ A.name, A.Repository.packs.names.addon }) do
             lines[#lines + 1] = string.format("%s memory: %.1f KiB", name, memory(name) or 0)
         end
     end

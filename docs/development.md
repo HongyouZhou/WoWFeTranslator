@@ -40,7 +40,15 @@ python3 tools/build.py --package
 
 ## 数据契约 v1
 
-`data/sources/sample-items.json` 是当前安装包的数据入口。包级包含 `schemaVersion`、`game`、`interface`、来源清单、实体、术语及正文数组。生成器以规范化 JSON 的 SHA-256 作为整包 `dataRevision`。
+`data/sources/items.json` 是当前安装包的数据入口，由 `tools/import_items.py` 生成：从 wago.tools 下载固定构建（当前 `1.60.1.71037`）的 ItemSparse 表 enUS 与 zhCN 两份 CSV（缓存在 `.cache/wago/`，不纳入 Git），只保留英文名非空、中文名确实含汉字的物品（17,495 条），每行一个实体，便于比较新旧构建。需要网络的只有导入这一步；`tools/build.py` 离线读取 JSON。来源清单记录构建号和两份 CSV 的 SHA-256。
+
+包级包含 `schemaVersion`、`game`、`interface`、来源清单、实体、术语及正文数组。生成器以规范化 JSON 的 SHA-256 作为整包 `dataRevision`。
+
+更新到新的客户端构建：修改 `tools/import_items.py` 中的 `BUILD`（或传 `--build`），运行导入，再运行 `python3 tools/check.py`。
+
+### 运行包格式 v2
+
+运行包是按需加载的数据插件 `WoWFeTranslator_Data_Names`，只包含目标语言的名称：每个类型一张扁平的 `ID → 名称` 表。来源、其他语言、术语和正文只留在源 JSON 中。生成的 `Data.lua` 先调用 `RegisterNames`（声明格式版本、游戏、类型、语言、修订和条数），再分块赋值（每个函数 2,000 条，避开 Lua 5.1 单函数常量上限；10 万条的合成数据已在测试中验证），最后调用 `FinishNames` 核对条数，条数不符时整包不用。`Repository.lua` 按清单登记“类型 → 数据插件”，加载状态按包记录；`GetText` 已预留给以后的正文数据，目前固定返回 `unsupported`。名称包在进入世界约 3 秒后、不在战斗中时预加载，避免第一次悬停时卡顿；开发机上 17,495 条约占 1.7 MB Lua 内存，加载约 10 毫秒（游戏内需实测）。
 
 实体具有 `type`、数字 `id`、多语言 `names` 和 `source`；生成后按类型和数字 ID 建表。术语具有与语言无关的 `key`、多语言名称／别名、来源，以及可选实体引用。
 
@@ -48,7 +56,7 @@ python3 tools/build.py --package
 
 正文的 `contentFingerprint` 绑定完整多语言片段内容，编辑后必须核对标注再更新指纹。校验器检查来源、重复 ID、术语与实体引用、跨语言占位符数量、对齐覆盖和指纹；未知正文片段形状拒绝生成。游戏链接／颜色等标记当前只能作为原样字面片段保留，不支持在它们内部标注术语。后续正式导入时需要补充标记解析与保护验证。
 
-用于验证正文、术语和变量的合成样例在 `tests/test_build.py` 中，不当作真实游戏剧情分发。正式第三方词库导入尚未完成；当前 13 条数据仅用于安装和核心链路测试，详情见[来源说明](../THIRD-PARTY.md)。
+用于验证正文、术语和变量的合成样例在 `tests/test_build.py` 与 `tests/fixtures/sample-items.json` 中，不当作真实游戏数据分发。数据来源见[来源说明](../THIRD-PARTY.md)。
 
 ## 验证边界
 

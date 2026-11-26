@@ -43,7 +43,7 @@ def main():
         for entry in ("WoWFeTranslator/WoWFeTranslator.toc", "WoWFeTranslator/Fonts/OFL.txt",
                       "WoWFeTranslator/Fonts/LXGWWenKaiLite-Regular.ttf",
                       "WoWFeTranslator/TESTING-zhCN.txt", "WoWFeTranslator/THIRD-PARTY.txt",
-                      "WoWFeTranslator_Data_Items/WoWFeTranslator_Data_Items.toc"):
+                      f"{build.DATA_ADDON}/{build.DATA_ADDON}.toc"):
             assert entry in entries, "Missing install entry " + entry
         assert not any(p.endswith((".py", ".json")) for p in entries)
     print(f"PASS Lua syntax, Forever API globals, TOC paths, ZIP layout, licenses and byte-identical rebuild\n{archive}")

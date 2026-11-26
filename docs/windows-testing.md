@@ -1,6 +1,10 @@
 # Windows 内部测试指南
 
-适用安装包：`WoWFeTranslator-0.2.0-alpha.1.zip`。这是 13 个物品名称的核心验证版，还没有任务翻译、NPC／技能翻译或术语注释界面。相对 `0.1.0-alpha.1` 的变化：提示框刷新时译文不再闪烁，EllesmereUI 隐藏提示框时不做处理，中文通过字体族始终使用随包字体（设置中的字体改为“英文字体”），报告增加 `owner_set`、`content_cleared` 计数、`render=` 字体模式和 `C_AddOnProfiler` 指标。本轮重点验证这些变化，并在原版界面与 EllesmereUI 下各测一遍。开发环境测试与游戏内验收分开记录；当前游戏内结果待测。
+适用安装包：`WoWFeTranslator-0.3.0-alpha.1.zip`。这是物品名称版：包含 Forever 客户端数据表中的 17,495 个官方中文物品名称，默认显示在原版提示框标题行右侧；还没有任务翻译、NPC／技能翻译或术语注释界面。
+
+**从 0.2.0 升级：数据插件改名为 `WoWFeTranslator_Data_Names`。** 删除 `AddOns` 中旧的 `WoWFeTranslator_Data_Items`（目录联接用 `rmdir` 删除），再为新目录创建联接或复制。
+
+`0.2.0-alpha.1` 相对 `0.1.0-alpha.1` 的变化：提示框刷新时译文不再闪烁，EllesmereUI 隐藏提示框时不做处理，中文通过字体族始终使用随包字体（设置中的字体改为“英文字体”），报告增加 `owner_set`、`content_cleared` 计数、`render=` 字体模式和 `C_AddOnProfiler` 指标。本轮重点验证这些变化，并在原版界面与 EllesmereUI 下各测一遍。开发环境测试与游戏内验收分开记录；当前游戏内结果待测。
 
 ## 1. 通过 Git 同步或传输安装包
 
@@ -19,7 +23,7 @@ cd WoWFeTranslator
 
 ```text
 addon\WoWFeTranslator
-addon\WoWFeTranslator_Data_Items
+addon\WoWFeTranslator_Data_Names
 ```
 
 以后在 Windows 的仓库目录中运行：
@@ -39,7 +43,7 @@ git pull --ff-only
 ```powershell
 $Repo   = "C:\Users\你的用户名\source\WoWFeTranslator"
 $AddOns = "D:\Games\World of Warcraft\_forever_\Interface\AddOns"
-foreach ($name in "WoWFeTranslator", "WoWFeTranslator_Data_Items") {
+foreach ($name in "WoWFeTranslator", "WoWFeTranslator_Data_Names") {
     $link = Join-Path $AddOns $name
     # 已有的复制版先改名备份；同名备份已存在时这一步会报错，请先处理旧备份。
     if (Test-Path $link) { Rename-Item $link "$name.bak" }
@@ -58,7 +62,7 @@ Get-Item (Join-Path $AddOns "WoWFeTranslator*") | Select-Object Name, LinkType, 
 
 ### 传输 ZIP
 
-开发机的文件是 `dist/WoWFeTranslator-0.2.0-alpha.1.zip`。通过你现有的文件传输方式、共享文件夹或 U 盘复制到 Windows；Windows 端无需 Git、Python 或 Lua 解释器。不必将开发仓库整个复制过去。
+开发机的文件是 `dist/WoWFeTranslator-0.3.0-alpha.1.zip`。通过你现有的文件传输方式、共享文件夹或 U 盘复制到 Windows；Windows 端无需 Git、Python 或 Lua 解释器。不必将开发仓库整个复制过去。
 
 仓库尚未发布 CurseForge 项目，也没有自动更新或 GitHub Release。不要在 CurseForge 搜索此名称作为安装前提；继续用 CurseForge 管理其他插件，本测试包手动安装。
 
@@ -78,8 +82,8 @@ Get-Item (Join-Path $AddOns "WoWFeTranslator*") | Select-Object Name, LinkType, 
     Fonts\
       LXGWWenKaiLite-Regular.ttf
       OFL.txt
-  WoWFeTranslator_Data_Items\
-    WoWFeTranslator_Data_Items.toc
+  WoWFeTranslator_Data_Names\
+    WoWFeTranslator_Data_Names.toc
     Data.lua
 ```
 
@@ -88,7 +92,7 @@ Get-Item (Join-Path $AddOns "WoWFeTranslator*") | Select-Object Name, LinkType, 
 
 当前 TOC 的接口号为 `16001`，来自此前提供的客户端快照。如果被标为过期，先记录当前版本和提示；可通过游戏自身的“加载过期插件”选项试测，但这不证明兼容。不要为了消除提示随意修改接口号。若出现“依赖缺失”，检查第二个目录和两项启用状态。
 
-可选：用 Windows PowerShell 的 `Get-FileHash -Algorithm SHA256 .\WoWFeTranslator-0.2.0-alpha.1.zip` 与旁边的 `.zip.sha256` 文件比较，确认传输完整。
+可选：用 Windows PowerShell 的 `Get-FileHash -Algorithm SHA256 .\WoWFeTranslator-0.3.0-alpha.1.zip` 与旁边的 `.zip.sha256` 文件比较，确认传输完整。
 
 ## 3. 五分钟功能检查
 
@@ -156,7 +160,7 @@ Get-Item (Join-Path $AddOns "WoWFeTranslator*") | Select-Object Name, LinkType, 
 
 两轮报告都附带 `Engine profiler` 一节，可与 EllesmereUI 设置面板中显示的 CPU 数值对照。引擎数值可能不包含挂在暴雪框体上的钩子耗时，判断本插件成本时以报告中的自有计时为准。
 
-记录测试机器的 CPU、内存、分辨率、UI 缩放及同时启用的插件。诊断有额外开销，测完应关闭；帧率对比需要在相同位置和条件下进行，不能把主观流畅或模拟测试数据当成游戏性能结论。13 条词库也不能证明大词库性能。
+记录测试机器的 CPU、内存、分辨率、UI 缩放及同时启用的插件。诊断有额外开销，测完应关闭；帧率对比需要在相同位置和条件下进行，不能把主观流畅或模拟测试数据当成游戏性能结论。名称包在进入世界约 3 秒后预加载，`data_load` 记录其耗时，`Data=` 一行应显示 `names=ready 17495`。
 
 ## 6. 遇到问题时
 
@@ -176,7 +180,7 @@ Get-Item (Join-Path $AddOns "WoWFeTranslator*") | Select-Object Name, LinkType, 
 | 炉石有原版提示但无中文 | 总开关、模式、两个插件是否启用；报告中的 Hooks、Data 和客户端信息 |
 | `load failed: DISABLED` 或其他加载错误 | 启用或修复数据包后 `/reload`；失败不会在每次悬停无限重试 |
 | 中文方框或乱码 | Fonts 文件是否齐全；报告中是否有 `Bundled font failed to load`，以及 `render=` 的值 |
-| 大多数物品没有翻译 | 此包只有 13 条，这是预期覆盖范围 |
+| 物品没有翻译 | `Data=` 是否为 `names=ready 17495`；该物品在客户端数据表中是否有中文名（约 1,900 个物品没有，例如 `20-slot Bag`） |
 | 报告 `deferred in combat` | 脱战后重新悬停；若仍不恢复，反馈报告 |
 
 反馈时可以直接使用：
