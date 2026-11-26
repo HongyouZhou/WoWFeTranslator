@@ -62,6 +62,7 @@ function A.InitSettings(saved)
         db.color[i] = bounded(db.color[i], default, 0, 1)
     end
     if db.display ~= "inline" and db.display ~= "card" then db.display = "inline" end
+    if db.style ~= "native" and db.style ~= "custom" then db.style = "native" end
     if type(db.modules) ~= "table" then db.modules = {} end
     for _, module in ipairs(A.MODULES) do
         if type(db.modules[module]) ~= "boolean" then db.modules[module] = true end
@@ -130,6 +131,16 @@ end
 function A.SetDisplay(display)
     if display ~= "inline" and display ~= "card" then return false end
     A.db.display = display
+    A.Changed()
+    return true
+end
+
+-- In the tooltip, "native" follows the tooltip's font and the item's quality
+-- colour; "custom" uses the font, size and colour settings. The card always
+-- uses the settings.
+function A.SetStyle(style)
+    if style ~= "native" and style ~= "custom" then return false end
+    A.db.style = style
     A.Changed()
     return true
 end

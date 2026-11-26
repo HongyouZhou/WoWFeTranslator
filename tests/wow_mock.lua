@@ -12,6 +12,10 @@ function W:SetAllPoints() end
 function W:SetClampedToScreen() end
 function W:SetColorTexture() end
 function W:SetTextColor(...) self.color = { ... } end
+function W:GetTextColor()
+    local c = self.color or { 1, 1, 1 }
+    return c[1], c[2], c[3]
+end
 function W:SetJustifyH() end
 function W:SetFrameStrata() end
 function W:EnableMouse() end
@@ -117,7 +121,9 @@ function M.refresh(tooltip, name, id)
     tooltip.itemId = id
     if name then
         tooltip.numLines = 1
-        M.line(tooltip, "TextLeft1"):SetText(name)
+        local title = M.line(tooltip, "TextLeft1")
+        title:SetText(name)
+        title:SetTextColor(1, 1, 1)
     end
     tooltip.itemName = name
     tooltip.link = id and "|Hitem:" .. id .. "|h[" .. name .. "]|h"

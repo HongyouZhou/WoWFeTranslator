@@ -76,8 +76,23 @@ function P:Inline(state, text)
         state.inlineFont, state.inlineSize, state.inlineFlags = region:GetFont()
         state.inlineWasShown = region:IsShown()
     end
-    A.Fonts:Apply(region, A.db.fontSize, true)
-    region:SetTextColor(unpack(A.db.color))
+    if A.db.style == "custom" then
+        A.Fonts:Apply(region, A.db.fontSize, true)
+        region:SetTextColor(unpack(A.db.color))
+        state.inlineFontChanged = true
+    else
+        -- Native style: the tooltip's own font (and so a UI suite's skin) and the
+        -- title's colour, which is the item's quality colour.
+        local title = _G[name .. "TextLeft1"]
+        local r, g, b = 1, 1, 1
+        if title and title.GetTextColor then
+            local tr, tg, tb = title:GetTextColor()
+            if A.Readable(tr) and A.Readable(tg) and A.Readable(tb) and type(tr) == "number" then
+                r, g, b = tr, tg, tb
+            end
+        end
+        region:SetTextColor(r, g, b)
+    end
     region:SetText(text)
     region:Show()
     A.Diagnostics:Count("render")
@@ -86,7 +101,9 @@ end
 function P:RestoreInline(state)
     local region = state.inlineRegion
     if not region then return end
-    if state.inlineFontObject then
+    if not state.inlineFontChanged then
+        -- The font was never touched.
+    elseif state.inlineFontObject then
         region:SetFontObject(state.inlineFontObject)
     elseif state.inlineFont then
         region:SetFont(state.inlineFont, state.inlineSize, state.inlineFlags)
@@ -97,5 +114,5 @@ function P:RestoreInline(state)
     end
     state.inlineRegion, state.inlineFontObject = nil, nil
     state.inlineFont, state.inlineSize, state.inlineFlags = nil, nil, nil
-    state.inlineRight, state.inlineWasShown = nil, nil
+    state.inlineRight, state.inlineWasShown, state.inlineFontChanged = nil, nil, nil
 end
