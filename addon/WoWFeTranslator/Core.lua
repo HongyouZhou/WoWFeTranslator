@@ -61,6 +61,7 @@ function A.InitSettings(saved)
     for i, default in ipairs({ 1, 0.82, 0 }) do
         db.color[i] = bounded(db.color[i], default, 0, 1)
     end
+    if db.display ~= "inline" and db.display ~= "card" then db.display = "inline" end
     if type(db.modules) ~= "table" then db.modules = {} end
     for _, module in ipairs(A.MODULES) do
         if type(db.modules[module]) ~= "boolean" then db.modules[module] = true end
@@ -123,6 +124,14 @@ end
 function A.SetEnabled(value)
     A.db.enabled = not not value
     A.Changed()
+end
+
+-- "inline": in the tooltip; "card": an own frame next to it.
+function A.SetDisplay(display)
+    if display ~= "inline" and display ~= "card" then return false end
+    A.db.display = display
+    A.Changed()
+    return true
 end
 
 -- Unimplemented modules keep their stored preference and cannot be changed.

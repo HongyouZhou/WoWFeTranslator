@@ -49,3 +49,53 @@ function P:Show(state, english, translated, key)
     state.renderKey = key
     A.Diagnostics:Count("render")
 end
+
+-- Inline display: the translation goes into the tooltip itself, on the right of
+-- the title line when that is free (English left, Chinese right), otherwise as a
+-- line of its own at the end. Tooltip lines are reused by later tooltips, so the
+-- font this changes is put back when the tooltip is cleared or hidden.
+function P:Inline(state, text)
+    local tooltip = state.tooltip
+    local name = tooltip:GetName()
+    if not name then return end
+    local region = state.inlineRegion
+    if not region then
+        local right = _G[name .. "TextRight1"]
+        local current = right and right:GetText()
+        if right and A.Readable(current) and (current == nil or current == "") then
+            region = right
+            state.inlineRight = true
+        else
+            tooltip:AddLine(" ")
+            region = _G[name .. "TextLeft" .. tooltip:NumLines()]
+            if not region then return end
+            state.inlineRight = false
+        end
+        state.inlineRegion = region
+        state.inlineFontObject = region:GetFontObject()
+        state.inlineFont, state.inlineSize, state.inlineFlags = region:GetFont()
+        state.inlineWasShown = region:IsShown()
+    end
+    A.Fonts:Apply(region, A.db.fontSize, true)
+    region:SetTextColor(unpack(A.db.color))
+    region:SetText(text)
+    region:Show()
+    A.Diagnostics:Count("render")
+end
+
+function P:RestoreInline(state)
+    local region = state.inlineRegion
+    if not region then return end
+    if state.inlineFontObject then
+        region:SetFontObject(state.inlineFontObject)
+    elseif state.inlineFont then
+        region:SetFont(state.inlineFont, state.inlineSize, state.inlineFlags)
+    end
+    if state.inlineRight then
+        region:SetText("")
+        if not state.inlineWasShown then region:Hide() end
+    end
+    state.inlineRegion, state.inlineFontObject = nil, nil
+    state.inlineFont, state.inlineSize, state.inlineFlags = nil, nil, nil
+    state.inlineRight, state.inlineWasShown = nil, nil
+end

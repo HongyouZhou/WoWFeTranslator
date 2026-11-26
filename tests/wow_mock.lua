@@ -65,6 +65,18 @@ function W:GetParent() return self.parent end
 function W:RegisterEvent(event) self.events[event] = true end
 function W:UnregisterEvent(event) self.events[event] = nil end
 function W:GetItem() return self.itemName, self.link end
+function W:GetFontObject() return self.fontObject end
+function W:GetFont() return self.font, self.fontSize, "" end
+-- Tooltip lines: TextLeftN / TextRightN globals, reused across builds like the client's.
+function W:NumLines() return self.numLines or 0 end
+function W:AddLine(text, r, g, b)
+    self.numLines = (self.numLines or 0) + 1
+    local line = M.line(self, "TextLeft" .. self.numLines)
+    line:SetText(text)
+    line:SetTextColor(r, g, b)
+    line:Show()
+end
+function W:RefreshData() M.refresh(self, self.itemName, self.itemId) end
 function W:SetOwner(owner) self.owner = owner end
 function W:SetHyperlink(link)
     local id = tonumber(link:match("item:(%d+)"))
@@ -76,6 +88,19 @@ function M.widget(name, parent)
     M.frames[#M.frames + 1] = widget
     return widget
 end
+function M.line(tooltip, suffix)
+    local name = tooltip:GetName() .. suffix
+    local line = _G[name]
+    if not line then
+        line = M.widget(name, tooltip)
+        -- The title line's two halves use the header font, the rest the body font.
+        local title = suffix == "TextLeft1" or suffix == "TextRight1"
+        line.fontObject = title and "GameTooltipHeaderText" or "GameTooltipText"
+        if suffix == "TextRight1" then line.shown = false end
+        _G[name] = line
+    end
+    return line
+end
 -- A new build: SetOwner, then content. Real clients clear and refill content.
 function M.item(tooltip, name, id)
     tooltip:SetOwner(UIParent)
@@ -83,7 +108,17 @@ function M.item(tooltip, name, id)
 end
 -- The same tooltip rebuilding its content without a new owner (periodic refresh).
 function M.refresh(tooltip, name, id)
+    -- ClearLines: texts go, line regions (and fonts set on them) stay.
+    for i = 1, tooltip:NumLines() do M.line(tooltip, "TextLeft" .. i):SetText(nil) end
+    local right = M.line(tooltip, "TextRight1")
+    right:SetText(nil); right.shown = false
+    tooltip.numLines = 0
     tooltip:Fire("OnTooltipCleared")
+    tooltip.itemId = id
+    if name then
+        tooltip.numLines = 1
+        M.line(tooltip, "TextLeft1"):SetText(name)
+    end
     tooltip.itemName = name
     tooltip.link = id and "|Hitem:" .. id .. "|h[" .. name .. "]|h"
     tooltip:Show()
@@ -112,6 +147,10 @@ function M.boot(options)
     _G.UIParent = M.widget("UIParent")
     _G.GameTooltip = M.widget("GameTooltip", UIParent)
     _G.ItemRefTooltip = M.widget("ItemRefTooltip", UIParent)
+    for _, tooltip in ipairs({ GameTooltip, ItemRefTooltip }) do
+        _G[tooltip.name .. "TextLeft1"], _G[tooltip.name .. "TextRight1"] = nil, nil
+        M.line(tooltip, "TextLeft1"); M.line(tooltip, "TextRight1")
+    end
     GameTooltip:Hide(); ItemRefTooltip:Hide()
     _G.STANDARD_TEXT_FONT = "fallback.ttf"
     _G.GameFontNormal = { GetFontObjectForAlphabet = function(_, alphabet)
@@ -135,7 +174,7 @@ function M.boot(options)
     _G.GetBuildInfo = function() return "1.60.1", "70790", "test", 16001 end
     _G.GetLocale = function() return "enUS" end
     _G.InCombatLockdown = function() return M.combat end
-    _G.issecretvalue = function(v) return v == M.secret end
+    _G.issecretvalue = function(v) return M.secret ~= nil and v == M.secret end
     _G.C_Timer = { After = function(_, callback) M.queue[#M.queue + 1] = callback end }
     _G.debugprofilestop = function() M.clockCalls = M.clockCalls + 1; return M.clockCalls * 0.001 end
     _G.C_AddOns = { GetAddOnMetadata = function(name, field)

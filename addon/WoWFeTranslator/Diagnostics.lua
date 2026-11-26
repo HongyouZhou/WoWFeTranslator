@@ -82,7 +82,7 @@ function D:Report()
     local lines = {
         "WoWFeTranslator " .. A.version,
         string.format("Client %s / %s / Interface %s / %s", version, build, interface, GetLocale()),
-        "Mode=" .. A.db.mode .. " enabled=" .. tostring(A.db.enabled),
+        "Mode=" .. A.db.mode .. " enabled=" .. tostring(A.db.enabled) .. " display=" .. A.db.display,
         "Features=" .. D:FeatureLine(),
         "Font=" .. A.fonts[A.db.fontIndex] .. " size=" .. A.db.fontSize
             .. " render=" .. (A.Fonts.mode or "not yet"),

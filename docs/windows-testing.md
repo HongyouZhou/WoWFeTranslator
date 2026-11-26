@@ -96,7 +96,7 @@ Get-Item (Join-Path $AddOns "WoWFeTranslator*") | Select-Object Name, LinkType, 
 
 | 操作 | 预期结果 |
 | --- | --- |
-| 悬停 `Hover: Hearthstone` | 原版物品提示仍在；附属卡片英文在左、中文“炉石”在右 |
+| 悬停 `Hover: Hearthstone` | 提示框标题行左边是英文 “Hearthstone”，右边是中文“炉石”（默认 `Display: in tooltip`） |
 | 悬停 `Hover: no translation` | 显示原版物品提示，没有中文卡片，也不残留上一件物品的译文 |
 | 反复在两个按钮之间移动 | 不重复叠加、不串词、不累积卡片 |
 | 点击 `Translation: OFF` | 已显示的翻译清除；后续悬停不再翻译 |
@@ -109,9 +109,10 @@ Get-Item (Join-Path $AddOns "WoWFeTranslator*") | Select-Object Name, LinkType, 
 | 物品模块开着时切到 `pvp` | 按钮显示 `Items: paused`（暂停而不是关闭）；切回后恢复 `Items: ON` |
 | 查看 `Spells`、`NPCs`、`Quests` 按钮 | 显示 `n/a`，不可点击 |
 | 关闭原版物品提示 | 附属卡片同步隐藏 |
-| 鼠标停在背包中的炉石上 10 秒 | 卡片持续显示，不周期性闪烁 |
+| 鼠标停在背包中的炉石上 10 秒 | 中文持续显示，不闪烁 |
+| 点 `Display: in tooltip` 切换为 `Display: card` | 中文改为显示在提示框下方的独立卡片中；再点一次切回 |
 
-第一版的名称对照卡片放在原版提示框下方；靠近屏幕底部时尝试放到上方。卡片内部是左右双栏，原版标题和属性不改写。它不是后续的任务逐句阅读器。
+默认把中文写进原版提示框：标题行右侧有空位时写在右侧，被其他内容占用时在提示框末尾追加一行。可选的独立卡片放在原版提示框下方，靠近屏幕底部时尝试放到上方，卡片内部是左右双栏，不改写原版内容。两者都不是后续的任务逐句阅读器。
 
 再测试背包中的炉石、亚麻布等样例，以及聊天中的已知物品链接：鼠标悬停使用 GameTooltip，点击物品链接使用 ItemRefTooltip。比较装备专用提示框等其他界面暂不支持。首次物品信息未缓存时，等原版信息出现后重新悬停。
 
